@@ -18,7 +18,7 @@ printf "\n=== Checking VS Code Installation ===\n"
 
 # Check if VS Code is installed
 if ! command -v code > /dev/null 2>&1; then
-    read -p "VS Code is not installed. Do you want to add the repo and install it? (y/n): " choice
+    read -p "VS Code is not installed. Do you want to add the repo and install it? (y/n): " choice < /dev/tty
     case "$choice" in
         [Yy]*)
             if command -v apt-get > /dev/null 2>&1; then
