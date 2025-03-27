@@ -14,9 +14,48 @@ install_package() {
     fi
 }
 
+printf "\n=== Checking VS Code Installation ===\n"
+
+# Check if VS Code is installed
+if ! command -v code > /dev/null 2>&1; then
+    read -p "VS Code is not installed. Do you want to add the repo and install it? (y/n): " choice
+    case "$choice" in
+        [Yy]*)
+            if command -v apt-get > /dev/null 2>&1; then
+                echo "Adding Microsoft's GPG key and repository for VS Code..."
+                wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /usr/share/keyrings/packages.microsoft.gpg > /dev/null
+                echo "deb [arch=amd64 signed-by=/usr/share/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list > /dev/null
+                sudo apt update
+                install_package "Visual Studio Code" "sudo apt install -y code" "dpkg -l | grep -q code"
+
+            elif command -v pacman > /dev/null 2>&1; then
+                install_package "Visual Studio Code" "sudo pacman -S --noconfirm code" "pacman -Qi code > /dev/null 2>&1"
+
+            elif command -v dnf > /dev/null 2>&1; then
+                sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+                sudo dnf check-update
+                install_package "Visual Studio Code" "sudo dnf install -y code" "dnf list --installed code > /dev/null 2>&1"
+
+            else
+                echo "Error: Unsupported package manager. Please install VS Code manually."
+                exit 1
+            fi
+            ;;
+        [Nn]*)
+            echo "Skipping VS Code installation."
+            ;;
+        *)
+            echo "Invalid input. Skipping VS Code installation."
+            ;;
+    esac
+else
+    echo "VS Code is already installed."
+fi
+
 printf "\n=== Installing python-nautilus ===\n"
 
-# Detect package manager and install python-nautilus
+# Install python-nautilus based on package manager
 if command -v pacman > /dev/null 2>&1; then
     install_package "python-nautilus" "sudo pacman -S --noconfirm python-nautilus" \
         "pacman -Qi python-nautilus > /dev/null 2>&1"
